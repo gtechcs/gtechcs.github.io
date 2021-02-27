@@ -1,4 +1,5 @@
 # React
+  Based on reactjs.org/docs
 
 ## Core React
 
@@ -101,6 +102,7 @@ const element = {
         }
     }
     ```
+    All React components must act like pure functions with respect to their props.  
     The Component Lifecycle: Mounting (constructor(), static getDerivedStateFromProps(), render(). componentDidMount())), Updating (static getDerivedStateFromProps(), shouldComponentUpdate(), render(), getSnapshotBeforeUpdate(), componentDidUpdate()), Unmounting (componentWillUnmount()).
 
 8. ### State
@@ -108,36 +110,36 @@ const element = {
 
 ```
     class Clock extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {date: new Date()};
-    }
+      constructor(props) {
+          super(props);
+          this.state = {date: new Date()};
+      }
 
-    componentDidMount() {
-        this.timerID = setInterval(
-        () => this.tick(),
-        1000
-        );
-    }
+      componentDidMount() {
+          this.timerID = setInterval(
+          () => this.tick(),
+          1000
+          );
+      }
 
-    componentWillUnmount() {
-        clearInterval(this.timerID);
-    }
+      componentWillUnmount() {
+          clearInterval(this.timerID);
+      }
 
-    tick() {
-        this.setState({
-        date: new Date()
-        });
-    }
+      tick() {
+          this.setState({
+          date: new Date()
+          });
+      }
 
-    render() {
-        return (
-        <div>
-            <h1>Hello, world!</h1>
-            <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
-        </div>
-        );
-    }
+      render() {
+          return (
+          <div>
+              <h1>Hello, world!</h1>
+              <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+          </div>
+          );
+      }
     }
 
     ReactDOM.render(
@@ -161,14 +163,88 @@ const element = {
 9. ### Events
     React events are named using camelCase, rather than lowercase.  
     With JSX you pass a function as the event handler, rather than a string.
+```
+  class Toggle extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {isToggleOn: true};
 
+      // This binding is necessary to make `this` work in the callback
+      this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick() {
+      this.setState(state => ({
+        isToggleOn: !state.isToggleOn
+      }));
+    }
+    //Option 1
+    render() {
+      return (
+        <button onClick={this.handleClick}>
+          {this.state.isToggleOn ? 'ON' : 'OFF'}
+        </button>
+      );
+    }
+  }
+
+    //Option 2
+    // This syntax ensures `this` is bound within handleClick
+    // The problem with this syntax is that a different callback is created each time the LoggingButton renders. 
+    //  We generally recommend binding in the constructor or using the class fields syntax, to avoid this sort of performance problem.
+    handleClick() {
+      console.log('this is:', this);
+    }
+    <button onClick={() => this.handleClick()}>
+      Click me
+    </button>
+
+  //Option 3
+  // public class fields syntax, @babel/plugin-proposal-class-properties
+  // This syntax ensures `this` is bound within handleClick.
+  // Warning: this is *experimental* syntax.
+  // This syntax is enabled by default in Create React App.
+  handleClick = () => {
+    console.log('this is:', this);
+  }
+  render() {
+    return (
+      <button onClick={this.handleClick}>
+        Click me
+      </button>
+
+```
+```
+  //Passing arguments
+  <button onClick={(e) => this.deleteRow(id, e)}>Delete Row</button>
+  <button onClick={this.deleteRow.bind(this, id)}>Delete Row</button>
+
+
+```
 10. ### Lists and Keys
     The best way to pick a key is to use a string that uniquely identifies a list item among its siblings.
+```
+  function NumberList(props) {
+    const numbers = props.numbers;
+    return (
+      <ul>
+        {numbers.map((number) =>
+          <ListItem key={number.toString()}
+                    value={number} />
+        )}
+      </ul>
+    );
+  }
+```
+11. ### Forms
+    Controlled Components: React state be the “single source of truth”. An input form element whose value is controlled by React.
 
-11. ### Refs and the DOM
+
+
+12. ### Refs and the DOM
     Refs provide a way to access DOM nodes or React elements created in the render method.
 
-12. ### Fragments
+13. ### Fragments
     A common pattern in React is for a component to return multiple elements. Fragments let you group a list of children without adding extra nodes to the DOM.
 ```
 class Columns extends React.Component {
@@ -205,3 +281,143 @@ function Glossary(props) {  //Keyed Fragment
   );
 }
 ```
+14. ### Lazy Loading
+```
+  import React, { Suspense, lazy } from 'react';
+  import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
+  const Home = lazy(() => import('./routes/Home'));
+  const About = lazy(() => import('./routes/About'));
+
+  const App = () => (
+    <Router>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Switch>
+          <Route exact path="/" component={Home}/>
+          <Route path="/about" component={About}/>
+        </Switch>
+      </Suspense>
+    </Router>
+  );
+
+```
+15. ### Context
+```
+  // Context lets us pass a value deep into the component tree
+  // without explicitly threading it through every component.
+  // Create a context for the current theme (with "light" as the default).
+  const ThemeContext = React.createContext('light');
+
+  class App extends React.Component {
+    render() {
+      // Use a Provider to pass the current theme to the tree below.
+      // Any component can read it, no matter how deep it is.
+      // In this example, we're passing "dark" as the current value.
+      return (
+        <ThemeContext.Provider value="dark">
+          <Toolbar />
+        </ThemeContext.Provider>
+      );
+    }
+  }
+  // A component in the middle doesn't have to
+  // pass the theme down explicitly anymore.
+  function Toolbar() {
+    return (
+      <div>
+        <ThemedButton />
+      </div>
+    );
+  }
+  class ThemedButton extends React.Component {
+    // Assign a contextType to read the current theme context.
+    // React will find the closest theme Provider above and use its value.
+    // In this example, the current theme is "dark".
+    static contextType = ThemeContext;
+    render() {
+      return <Button theme={this.context} />;
+    }
+  }
+```
+16. ### Error Doundary
+```
+  class ErrorBoundary extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error) {
+      // Update state so the next render will show the fallback UI.
+      return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+      // You can also log the error to an error reporting service
+      logErrorToMyService(error, errorInfo);
+    }
+
+    render() {
+      if (this.state.hasError) {
+        // You can render any custom fallback UI
+        return <h1>Something went wrong.</h1>;
+      }
+
+      return this.props.children; 
+    }
+  }
+```
+17. ### Refs and Forwarding refs
+  Refs provide a way to access DOM nodes or React elements created in the render method.
+  Used for managing focus, text selection, or media playback.
+
+```
+    class AutoFocusTextInput extends React.Component {
+      constructor(props) {
+        super(props);
+        this.textInput = React.createRef();
+      }
+
+      componentDidMount() {
+        this.textInput.current.focusTextInput();
+      }
+
+      render() {
+        return (
+          <CustomTextInput ref={this.textInput} />
+        );
+      }
+    }
+```
+18. ### Higher Order Components
+    A higher-order component is a function that takes a component and returns a new component.
+```
+    const CommentListWithSubscription = withSubscription(
+      CommentList,
+      (DataSource) => DataSource.getComments()
+    );
+
+    const BlogPostWithSubscription = withSubscription(
+      BlogPost,
+      (DataSource, props) => DataSource.getBlogPost(props.id)
+    );
+```
+    Don’t Mutate the Original Component. Use Composition.  
+    Convention: Pass Unrelated Props Through to the Wrapped Component  
+    Convention: Maximizing Composability  
+    Convention: Wrap the Display Name for Easy Debugging  
+    Don’t Use HOCs Inside the render Method  
+    Static Methods Must Be Copied Over  
+    Refs Aren’t Passed Through
+
+19. ### Integrating with Other Libraries
+
+
+20. ### Optimizing Performance
+    Use the Production Build  
+    
+
+
+
+
+
